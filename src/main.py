@@ -28,6 +28,14 @@ RETENCION_TABLA = [
 ]
 
 
+# ------------------------------
+# Utilidades
+# ------------------------------
+def convertir_a_decimal(valor: float | int | str) -> Decimal:
+    """Convierte valores numéricos a Decimal"""
+    return Decimal(str(valor))
+
+
 def calcular_prima(data):
     return {}
 
