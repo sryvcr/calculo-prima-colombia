@@ -1,5 +1,12 @@
 import json
 import argparse
+from decimal import getcontext, ROUND_HALF_UP
+
+# ------------------------------
+# Configuración de Decimal
+# ------------------------------
+getcontext().prec = 28  # Alta precisión
+getcontext().rounding = ROUND_HALF_UP
 
 
 def calcular_prima(data):
