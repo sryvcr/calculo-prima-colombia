@@ -11,4 +11,12 @@ build:
 
 # Ejecutar con un JSON_FILE dinámico
 run:
-	docker run --rm $(IMAGE_NAME):$(TAG) $(JSON_FILE)
+	docker run --rm --entrypoint python $(IMAGE_NAME):$(TAG) main.py $(JSON_FILE)
+
+# Ejecutar tests
+test:
+	docker run --rm $(IMAGE_NAME):$(TAG) pytest -s -p no:warnings
+
+# Ejecutar bash
+bash:
+	docker run --rm -it $(IMAGE_NAME):$(TAG) bash
