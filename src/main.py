@@ -9,25 +9,16 @@ from domain.constants import (
     UVT,
 )
 from domain.models import EmpleadoData, PrimaInfo
+from utils.converters import (
+    convertir_a_decimal,
+    convertir_fecha_string_isoformat_a_date,
+)
 
 # ------------------------------
 # Configuración de Decimal
 # ------------------------------
 getcontext().prec = 28  # Alta precisión
 getcontext().rounding = ROUND_HALF_UP
-
-
-# ------------------------------
-# Utilidades
-# ------------------------------
-def convertir_a_decimal(valor: float | int | str) -> Decimal:
-    """Convierte valores numéricos a Decimal"""
-    return Decimal(str(valor))
-
-
-def convertir_fecha_string_isoformat_a_date(fecha_str: str) -> date:
-    """Convierte una fecha en texto en formato ISO a un objeto date"""
-    return date.fromisoformat(fecha_str)
 
 
 # ------------------------------
