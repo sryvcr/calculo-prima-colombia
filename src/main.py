@@ -1,7 +1,6 @@
 import json
 import argparse
 from decimal import Decimal, getcontext, ROUND_HALF_UP
-from dataclasses import dataclass
 from datetime import date
 
 from domain.constants import (
@@ -9,38 +8,13 @@ from domain.constants import (
     RETENCION_TABLA,
     UVT,
 )
+from domain.models import EmpleadoData, PrimaInfo
 
 # ------------------------------
 # Configuración de Decimal
 # ------------------------------
 getcontext().prec = 28  # Alta precisión
 getcontext().rounding = ROUND_HALF_UP
-
-
-# ------------------------------
-# Dataclasses
-# ------------------------------
-@dataclass
-class EmpleadoData:
-    nombre: str
-    fecha_ingreso: date
-    salarios_mensuales: dict[str, Decimal]
-    periodo_calculo: str
-    metodo_calculo_salario: str
-    ausencias_no_remuneradas: list[date]
-
-
-@dataclass
-class PrimaInfo:
-    empleado: str
-    periodo_calculo: str
-    salario_base_prima: Decimal
-    dias_trabajados_semestre: int
-    prima_bruta: Decimal
-    renta_exenta_25_por_ciento: Decimal
-    base_gravable_impuesto: Decimal
-    impuesto_retenido: Decimal
-    prima_neta: Decimal
 
 
 # ------------------------------
