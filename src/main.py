@@ -66,6 +66,33 @@ def calcular_dias_trabajados(
     return max(total_dias - ausencias_dias, 0)
 
 
+def calcular_salario_base(
+    metodo: str,
+    salarios: dict[str, float],
+    periodo: str
+) -> Decimal:
+    """Calcula el salario base de la prima según el método elegido."""
+    meses_semestre = {
+        "primer_semestre": [
+            "enero", "febrero", "marzo", "abril", "mayo", "junio"
+        ],
+        "segundo_semestre": [
+            "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+        ],
+    }
+    meses = meses_semestre[periodo]
+
+    if metodo == "actual":
+        return convertir_a_decimal(salarios[meses[-1]])
+    elif metodo == "promedio":
+        return (
+            sum(convertir_a_decimal(salarios[mes]) for mes in meses)
+            / convertir_a_decimal(len(meses))
+        )
+    else:
+        raise ValueError("Método de cálculo de salario no válido")
+
+
 def calcular_prima(data):
     return {}
 
