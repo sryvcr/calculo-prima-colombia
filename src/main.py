@@ -44,6 +44,19 @@ class EmpleadoData:
     ausencias_no_remuneradas: list[date]
 
 
+@dataclass
+class PrimaInfo:
+    empleado: str
+    periodo_calculo: str
+    salario_base_prima: Decimal
+    dias_trabajados_semestre: int
+    prima_bruta: Decimal
+    renta_exenta_25_por_ciento: Decimal
+    base_gravable_impuesto: Decimal
+    impuesto_retenido: Decimal
+    prima_neta: Decimal
+
+
 # ------------------------------
 # Utilidades
 # ------------------------------
@@ -155,7 +168,7 @@ def calcular_prima_neta(prima_bruta: Decimal, impuesto: Decimal) -> Decimal:
     return (prima_bruta - impuesto).quantize(Decimal("0.01"))
 
 
-def calcular_prima(empleado_data: EmpleadoData):
+def calcular_prima(empleado_data: EmpleadoData) -> PrimaInfo:
     """Realiza el cálculo completo de la prima."""
     nombre = empleado_data.nombre
     fecha_ingreso = convertir_fecha_string_isoformat_a_date(
@@ -189,17 +202,17 @@ def calcular_prima(empleado_data: EmpleadoData):
     )
     prima_neta = calcular_prima_neta(prima_bruta=prima_bruta, impuesto=impuesto)
 
-    return {
-        "empleado": nombre,
-        "periodo_calculo": periodo,
-        "salario_base_prima": float(salario_base.quantize(Decimal("0.01"))),
-        "dias_trabajados_semestre": dias_trabajados,
-        "prima_bruta": float(prima_bruta),
-        "renta_exenta_25_por_ciento": float(renta_exenta),
-        "base_gravable_impuesto": float(base_gravable),
-        "impuesto_retenido": float(impuesto),
-        "prima_neta": float(prima_neta)
-    }
+    return PrimaInfo(
+        empleado=nombre,
+        periodo_calculo=periodo,
+        salario_base_prima=salario_base.quantize(Decimal("0.01")),
+        dias_trabajados_semestre=dias_trabajados,
+        prima_bruta=prima_bruta,
+        renta_exenta_25_por_ciento=renta_exenta,
+        base_gravable_impuesto=base_gravable,
+        impuesto_retenido=impuesto,
+        prima_neta=prima_neta,
+    )
 
 
 # ------------------------------
@@ -224,7 +237,7 @@ def main():
         ausencias_no_remuneradas=data.get("ausencias_no_remuneradas", [])
     )
     result = calcular_prima(empleado_data=empleado_data)
-    print(json.dumps(result, indent=2, ensure_ascii=False))
+    print(json.dumps(result.__dict__, indent=4, ensure_ascii=False, default=float))
 
 
 if __name__ == "__main__":
