@@ -1,6 +1,7 @@
 import json
 import argparse
 from decimal import Decimal, getcontext, ROUND_HALF_UP
+from dataclasses import dataclass
 from datetime import date
 
 # ------------------------------
@@ -31,6 +32,19 @@ RETENCION_TABLA = [
 
 
 # ------------------------------
+# Dataclasses
+# ------------------------------
+@dataclass
+class EmpleadoData:
+    nombre: str
+    fecha_ingreso: date
+    salarios_mensuales: dict[str, Decimal]
+    periodo_calculo: str
+    metodo_calculo_salario: str
+    ausencias_no_remuneradas: list[date]
+
+
+# ------------------------------
 # Utilidades
 # ------------------------------
 def convertir_a_decimal(valor: float | int | str) -> Decimal:
@@ -50,7 +64,7 @@ def calcular_dias_trabajados(
     periodo: str,
     fecha_ingreso: date,
     ausencias: list[date],
- ) -> int:
+) -> int:
     """
     Calcula los días trabajados en el semestre, restando ausencias dentro del periodo.
     """
@@ -141,16 +155,18 @@ def calcular_prima_neta(prima_bruta: Decimal, impuesto: Decimal) -> Decimal:
     return (prima_bruta - impuesto).quantize(Decimal("0.01"))
 
 
-def calcular_prima(data):
+def calcular_prima(empleado_data: EmpleadoData):
     """Realiza el cálculo completo de la prima."""
-    nombre = data["nombre"]
-    fecha_ingreso = convertir_fecha_string_isoformat_a_date(data["fecha_ingreso"])
-    salarios = data["salarios_mensuales"]
-    periodo = data["periodo_calculo"]
-    metodo = data["metodo_calculo_salario"]
+    nombre = empleado_data.nombre
+    fecha_ingreso = convertir_fecha_string_isoformat_a_date(
+        fecha_str=empleado_data.fecha_ingreso
+    )
+    salarios = empleado_data.salarios_mensuales
+    periodo = empleado_data.periodo_calculo
+    metodo = empleado_data.metodo_calculo_salario
     ausencias = [
-        convertir_fecha_string_isoformat_a_date(ausencia)
-        for ausencia in data.get("ausencias_no_remuneradas", [])
+        convertir_fecha_string_isoformat_a_date(fecha_str=ausencia)
+        for ausencia in empleado_data.ausencias_no_remuneradas
     ]
 
     dias_trabajados = calcular_dias_trabajados(
@@ -199,7 +215,15 @@ def main():
     with open(args.input_file, "r", encoding="utf-8") as f:
         data = json.load(f)
 
-    result = calcular_prima(data)
+    empleado_data = EmpleadoData(
+        nombre=data["nombre"],
+        fecha_ingreso=data["fecha_ingreso"],
+        salarios_mensuales=data["salarios_mensuales"],
+        periodo_calculo=data["periodo_calculo"],
+        metodo_calculo_salario=data["metodo_calculo_salario"],
+        ausencias_no_remuneradas=data.get("ausencias_no_remuneradas", [])
+    )
+    result = calcular_prima(empleado_data=empleado_data)
     print(json.dumps(result, indent=2, ensure_ascii=False))
 
 
