@@ -5,7 +5,7 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Copiar código principal
-COPY src/main.py .
+COPY src/ .
 
 # Copiar archivos JSON de prueba
 COPY src/samples/ /app/samples/
