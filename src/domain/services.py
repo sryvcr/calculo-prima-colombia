@@ -1,0 +1,166 @@
+from decimal import Decimal
+from datetime import date
+
+from domain.constants import (
+    PORCENTAJE_RENTA_EXENTA,
+    RETENCION_TABLA,
+    UVT,
+)
+from domain.models import EmpleadoData, PrimaInfo
+from utils.converters import convertir_a_decimal
+
+
+class PrimaCalculadora:
+    """
+    Clase para calcular la prima de servicios de un empleado
+    en Colombia.
+    """
+    def __init__(self, empleado_data: EmpleadoData):
+        self.empleado_data = empleado_data
+
+    def calcular(self) -> PrimaInfo:
+        """Realiza el cálculo completo de la prima."""
+        nombre = self.empleado_data.nombre
+        fecha_ingreso = self.empleado_data.fecha_ingreso
+        salarios = self.empleado_data.salarios_mensuales
+        periodo = self.empleado_data.periodo_calculo
+        metodo = self.empleado_data.metodo_calculo_salario
+        ausencias = self.empleado_data.ausencias_no_remuneradas
+
+        dias_trabajados = self._calcular_dias_trabajados(
+            periodo=periodo,
+            fecha_ingreso=fecha_ingreso,
+            ausencias=ausencias,
+        )
+        salario_base = self._calcular_salario_base(
+            metodo=metodo,
+            salarios=salarios,
+            periodo=periodo,
+        )
+
+        prima_bruta = self._calcular_prima_bruta(
+            salario_base=salario_base,
+            dias_trabajados=dias_trabajados,
+        )
+        renta_exenta, base_gravable, impuesto = self._calcular_retencion_en_la_fuente(
+            prima_bruta=prima_bruta,
+        )
+        prima_neta = self._calcular_prima_neta(
+            prima_bruta=prima_bruta,
+            impuesto=impuesto
+        )
+
+        return PrimaInfo(
+            empleado=nombre,
+            periodo_calculo=periodo,
+            salario_base_prima=salario_base.quantize(Decimal("0.01")),
+            dias_trabajados_semestre=dias_trabajados,
+            prima_bruta=prima_bruta,
+            renta_exenta_25_por_ciento=renta_exenta,
+            base_gravable_impuesto=base_gravable,
+            impuesto_retenido=impuesto,
+            prima_neta=prima_neta,
+        )
+
+    def _calcular_dias_trabajados(
+        self,
+        periodo: str,
+        fecha_ingreso: date,
+        ausencias: list[date],
+    ) -> int:
+        """
+        Calcula los días trabajados en el semestre,
+        restando ausencias dentro del periodo.
+        """
+        if periodo == "primer_semestre":
+            inicio = date(fecha_ingreso.year, 1, 1)
+            fin = date(fecha_ingreso.year, 6, 30)
+        elif periodo == "segundo_semestre":
+            inicio = date(fecha_ingreso.year, 7, 1)
+            fin = date(fecha_ingreso.year, 12, 31)
+        else:
+            raise ValueError("Periodo no válido")
+
+        if fecha_ingreso > inicio:
+            inicio = fecha_ingreso
+
+        total_dias = (fin - inicio).days + 1  # se suma 1 para incluir el dia final
+        ausencias_dias = sum(1 for ausencia in ausencias if inicio <= ausencia <= fin)
+
+        return max(total_dias - ausencias_dias, 0)
+
+    def _calcular_salario_base(
+        self,
+        metodo: str,
+        salarios: dict[str, float],
+        periodo: str,
+    ) -> Decimal:
+        """Calcula el salario base de la prima según el método elegido."""
+        meses_semestre = {
+            "primer_semestre": [
+                "enero", "febrero", "marzo", "abril", "mayo", "junio"
+            ],
+            "segundo_semestre": [
+                "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+            ],
+        }
+        meses = meses_semestre[periodo]
+
+        if metodo == "actual":
+            return convertir_a_decimal(salarios[meses[-1]])
+        elif metodo == "promedio":
+            return (
+                sum(convertir_a_decimal(salarios[mes]) for mes in meses)
+                / convertir_a_decimal(len(meses))
+            )
+        else:
+            raise ValueError("Método de cálculo de salario no válido")
+
+    def _calcular_retencion_en_la_fuente(
+        self,
+        prima_bruta: Decimal,
+    ) -> tuple[Decimal, Decimal, Decimal]:
+        """
+        Calcula la retención en la fuente según Art. 383 E.T.
+
+        Retorna: (renta exenta, base gravable, impuesto retenido).
+        """
+        renta_exenta = (prima_bruta * PORCENTAJE_RENTA_EXENTA).quantize(Decimal("0.01"))
+        base_gravable = (prima_bruta - renta_exenta).quantize(Decimal("0.01"))
+        base_uvt = base_gravable / UVT
+
+        impuesto_uvt = convertir_a_decimal(0)
+        for min_uvt, max_uvt, fijo_uvt, tarifa in RETENCION_TABLA:
+            min_uvt, max_uvt = convertir_a_decimal(min_uvt), convertir_a_decimal(max_uvt)
+            fijo_uvt, tarifa = convertir_a_decimal(fijo_uvt), convertir_a_decimal(tarifa)
+            if base_uvt > min_uvt and base_uvt <= max_uvt:
+                impuesto_uvt = fijo_uvt + (base_uvt - min_uvt) * tarifa
+                break
+
+        impuesto_retenido = (impuesto_uvt * UVT).quantize(Decimal("0.01"))
+        return renta_exenta, base_gravable, impuesto_retenido
+
+    def _calcular_prima_bruta(
+        self,
+        salario_base: Decimal,
+        dias_trabajados: int,
+    ) -> Decimal:
+        """
+        Calcula la prima bruta de un empleado aplicando la formula:
+        (salario_base * dias_trabajados) / 360
+        """
+        return (
+            (salario_base * convertir_a_decimal(dias_trabajados))
+            / convertir_a_decimal(360)
+        ).quantize(Decimal("0.01"))
+
+    def _calcular_prima_neta(
+        self,
+        prima_bruta: Decimal,
+        impuesto: Decimal,
+    ) -> Decimal:
+        """
+        Calcula la prima neta de un empleado de acuerdo a la diferencia
+        entre la prima bruta y el impuesto retenido.
+        """
+        return (prima_bruta - impuesto).quantize(Decimal("0.01"))
