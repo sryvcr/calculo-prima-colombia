@@ -13,7 +13,8 @@ getcontext().rounding = ROUND_HALF_UP
 # ------------------------------
 # Constantes
 # ------------------------------
-UVT = Decimal("49000")  # Valor UVT 2025 extraido del pdf
+UVT = Decimal("47065")  # Valor UVT 2025 extraido del pdf
+PORCENTAJE_RENTA_EXENTA = Decimal("0.25")
 
 # Tabla Art. 383 E.T. (retención en la fuente)
 # Formato: (mínimo UVT, máximo UVT, fijo UVT, tarifa marginal)
@@ -91,6 +92,30 @@ def calcular_salario_base(
         )
     else:
         raise ValueError("Método de cálculo de salario no válido")
+
+
+def calcular_retencion_en_la_fuente(
+    prima_bruta: Decimal
+) -> tuple[Decimal, Decimal, Decimal]:
+    """
+    Calcula la retención en la fuente según Art. 383 E.T.
+
+    Retorna: (renta exenta, base gravable, impuesto retenido).
+    """
+    renta_exenta = (prima_bruta * PORCENTAJE_RENTA_EXENTA).quantize(Decimal("0.01"))
+    base_gravable = (prima_bruta - renta_exenta).quantize(Decimal("0.01"))
+    base_uvt = base_gravable / UVT
+
+    impuesto_uvt = convertir_a_decimal(0)
+    for min_uvt, max_uvt, fijo_uvt, tarifa in RETENCION_TABLA:
+        min_uvt, max_uvt = convertir_a_decimal(min_uvt), convertir_a_decimal(max_uvt)
+        fijo_uvt, tarifa = convertir_a_decimal(fijo_uvt), convertir_a_decimal(tarifa)
+        if base_uvt > min_uvt and base_uvt <= max_uvt:
+            impuesto_uvt = fijo_uvt + (base_uvt - min_uvt) * tarifa
+            break
+
+    impuesto_retenido = (impuesto_uvt * UVT).quantize(Decimal("0.01"))
+    return renta_exenta, base_gravable, impuesto_retenido
 
 
 def calcular_prima(data):
