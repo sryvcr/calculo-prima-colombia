@@ -1,0 +1,24 @@
+{
+    "nombre": "Ash Ketchum",
+    "fecha_ingreso": "2024-02-01",
+    "salarios_mensuales": {
+        "enero": 18000000,
+        "febrero": 18000000,
+        "marzo": 18000000,
+        "abril": 18200000,
+        "mayo": 18200000,
+        "junio": 18250000,
+        "julio": 18250000,
+        "agosto": 18250000,
+        "septiembre": 18500000,
+        "octubre": 18500000,
+        "noviembre": 18500000,
+        "diciembre": 18550000
+    },
+    "periodo_calculo": "segundo_semestre",
+    "metodo_calculo_salario": "actual",
+    "ausencias_no_remuneradas": [
+        "2024-08-12",
+        "2024-08-15"
+    ]
+}
