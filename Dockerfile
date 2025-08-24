@@ -14,7 +14,7 @@ COPY src/ .
 COPY tests/ .
 
 # Copiar archivos JSON de prueba
-COPY src/samples/ /app/samples/
+COPY samples/ /app/samples/
 
 # Comando por defecto para ejecutar la aplicación
 CMD ["python", "main.py"]
