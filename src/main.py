@@ -128,6 +128,14 @@ def calcular_prima_bruta(salario_base: Decimal, dias_trabajados: int) -> Decimal
     ).quantize(Decimal("0.01"))
 
 
+def calcular_prima_neta(prima_bruta: Decimal, impuesto: Decimal) -> Decimal:
+    """
+    Calcula la prima neta de un empleado de acuerdo a la diferencia
+    entre la prima bruta y el impuesto retenido.
+    """
+    return (prima_bruta - impuesto).quantize(Decimal("0.01"))
+
+
 def calcular_prima(data):
     return {}
 
