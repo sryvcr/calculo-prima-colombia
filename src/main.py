@@ -1,6 +1,6 @@
 from decimal import getcontext, ROUND_HALF_UP
 
-from aplication.cli import cli
+from application.cli import cli
 
 # Configuración de Decimal
 getcontext().prec = 28  # Alta precisión

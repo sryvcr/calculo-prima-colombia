@@ -1,6 +1,7 @@
 from domain.models import EmpleadoData
 from utils.converters import convertir_fecha_string_isoformat_a_date
 
+
 class EmpleadoFactory:
     @staticmethod
     def from_dict(data: dict) -> EmpleadoData:
