@@ -38,6 +38,11 @@ def convertir_a_decimal(valor: float | int | str) -> Decimal:
     return Decimal(str(valor))
 
 
+def convertir_fecha_string_isoformat_a_date(fecha_str: str) -> date:
+    """Convierte una fecha en texto en formato ISO a un objeto date"""
+    return date.fromisoformat(fecha_str)
+
+
 # ------------------------------
 # Cálculos principales
 # ------------------------------
@@ -139,12 +144,12 @@ def calcular_prima_neta(prima_bruta: Decimal, impuesto: Decimal) -> Decimal:
 def calcular_prima(data):
     """Realiza el cálculo completo de la prima."""
     nombre = data["nombre"]
-    fecha_ingreso = date.fromisoformat(data["fecha_ingreso"])
+    fecha_ingreso = convertir_fecha_string_isoformat_a_date(data["fecha_ingreso"])
     salarios = data["salarios_mensuales"]
     periodo = data["periodo_calculo"]
     metodo = data["metodo_calculo_salario"]
     ausencias = [
-        date.fromisoformat(ausencia)
+        convertir_fecha_string_isoformat_a_date(ausencia)
         for ausencia in data.get("ausencias_no_remuneradas", [])
     ]
 
