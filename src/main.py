@@ -8,6 +8,7 @@ from domain.constants import (
     RETENCION_TABLA,
     UVT,
 )
+from domain.factories import EmpleadoFactory
 from domain.models import EmpleadoData, PrimaInfo
 from utils.converters import (
     convertir_a_decimal,
@@ -122,16 +123,11 @@ def calcular_prima_neta(prima_bruta: Decimal, impuesto: Decimal) -> Decimal:
 def calcular_prima(empleado_data: EmpleadoData) -> PrimaInfo:
     """Realiza el cálculo completo de la prima."""
     nombre = empleado_data.nombre
-    fecha_ingreso = convertir_fecha_string_isoformat_a_date(
-        fecha_str=empleado_data.fecha_ingreso
-    )
+    fecha_ingreso = empleado_data.fecha_ingreso
     salarios = empleado_data.salarios_mensuales
     periodo = empleado_data.periodo_calculo
     metodo = empleado_data.metodo_calculo_salario
-    ausencias = [
-        convertir_fecha_string_isoformat_a_date(fecha_str=ausencia)
-        for ausencia in empleado_data.ausencias_no_remuneradas
-    ]
+    ausencias = empleado_data.ausencias_no_remuneradas
 
     dias_trabajados = calcular_dias_trabajados(
         periodo=periodo,
@@ -179,14 +175,7 @@ def main():
     with open(args.input_file, "r", encoding="utf-8") as f:
         data = json.load(f)
 
-    empleado_data = EmpleadoData(
-        nombre=data["nombre"],
-        fecha_ingreso=data["fecha_ingreso"],
-        salarios_mensuales=data["salarios_mensuales"],
-        periodo_calculo=data["periodo_calculo"],
-        metodo_calculo_salario=data["metodo_calculo_salario"],
-        ausencias_no_remuneradas=data.get("ausencias_no_remuneradas", [])
-    )
+    empleado_data = EmpleadoFactory.from_dict(data)
     result = calcular_prima(empleado_data=empleado_data)
     print(json.dumps(result.__dict__, indent=4, ensure_ascii=False, default=float))
 
