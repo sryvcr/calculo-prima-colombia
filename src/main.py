@@ -118,6 +118,16 @@ def calcular_retencion_en_la_fuente(
     return renta_exenta, base_gravable, impuesto_retenido
 
 
+def calcular_prima_bruta(salario_base: Decimal, dias_trabajados: int) -> Decimal:
+    """
+    Calcula la prima bruta de un empleado aplicando la formula:
+    (salario_base * dias_trabajados) / 360
+    """
+    return (
+        salario_base * convertir_a_decimal(dias_trabajados) / convertir_a_decimal(360)
+    ).quantize(Decimal("0.01"))
+
+
 def calcular_prima(data):
     return {}
 
