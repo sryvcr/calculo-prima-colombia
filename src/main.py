@@ -137,7 +137,48 @@ def calcular_prima_neta(prima_bruta: Decimal, impuesto: Decimal) -> Decimal:
 
 
 def calcular_prima(data):
-    return {}
+    """Realiza el cálculo completo de la prima."""
+    nombre = data["nombre"]
+    fecha_ingreso = date.fromisoformat(data["fecha_ingreso"])
+    salarios = data["salarios_mensuales"]
+    periodo = data["periodo_calculo"]
+    metodo = data["metodo_calculo_salario"]
+    ausencias = [
+        date.fromisoformat(ausencia)
+        for ausencia in data.get("ausencias_no_remuneradas", [])
+    ]
+
+    dias_trabajados = calcular_dias_trabajados(
+        periodo=periodo,
+        fecha_ingreso=fecha_ingreso,
+        ausencias=ausencias,
+    )
+    salario_base = calcular_salario_base(
+        metodo=metodo,
+        salarios=salarios,
+        periodo=periodo,
+    )
+
+    prima_bruta = calcular_prima_bruta(
+        salario_base=salario_base,
+        dias_trabajados=dias_trabajados,
+    )
+    renta_exenta, base_gravable, impuesto = calcular_retencion_en_la_fuente(
+        prima_bruta=prima_bruta,
+    )
+    prima_neta = calcular_prima_neta(prima_bruta=prima_bruta, impuesto=impuesto)
+
+    return {
+        "empleado": nombre,
+        "periodo_calculo": periodo,
+        "salario_base_prima": float(salario_base.quantize(Decimal("0.01"))),
+        "dias_trabajados_semestre": dias_trabajados,
+        "prima_bruta": float(prima_bruta),
+        "renta_exenta_25_por_ciento": float(renta_exenta),
+        "base_gravable_impuesto": float(base_gravable),
+        "impuesto_retenido": float(impuesto),
+        "prima_neta": float(prima_neta)
+    }
 
 
 # ------------------------------
