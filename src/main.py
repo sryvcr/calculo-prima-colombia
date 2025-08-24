@@ -1,6 +1,7 @@
 import json
 import argparse
 from decimal import Decimal, getcontext, ROUND_HALF_UP
+from datetime import date
 
 # ------------------------------
 # Configuración de Decimal
@@ -36,10 +37,42 @@ def convertir_a_decimal(valor: float | int | str) -> Decimal:
     return Decimal(str(valor))
 
 
+# ------------------------------
+# Cálculos principales
+# ------------------------------
+def calcular_dias_trabajados(
+    periodo: str,
+    fecha_ingreso: date,
+    ausencias: list[date],
+ ) -> int:
+    """
+    Calcula los días trabajados en el semestre, restando ausencias dentro del periodo.
+    """
+    if periodo == "primer_semestre":
+        inicio = date(fecha_ingreso.year, 1, 1)
+        fin = date(fecha_ingreso.year, 6, 30)
+    elif periodo == "segundo_semestre":
+        inicio = date(fecha_ingreso.year, 7, 1)
+        fin = date(fecha_ingreso.year, 12, 31)
+    else:
+        raise ValueError("Periodo no válido")
+
+    if fecha_ingreso > inicio:
+        inicio = fecha_ingreso
+
+    total_dias = (fin - inicio).days + 1  # se suma 1 para incluir el dia final
+    ausencias_dias = sum(1 for ausencia in ausencias if inicio <= ausencia <= fin)
+
+    return max(total_dias - ausencias_dias, 0)
+
+
 def calcular_prima(data):
     return {}
 
 
+# ------------------------------
+# CLI
+# ------------------------------
 def main():
     parser = argparse.ArgumentParser(
         description="Cálculo de Prima de Servicios en Colombia"
